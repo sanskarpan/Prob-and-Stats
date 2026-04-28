@@ -105,6 +105,34 @@ class TestContinuousDistributions(unittest.TestCase):
         # Test CDF at mean (should be 0.5)
         self.assertAlmostEqual(norm.cdf(0.0), 0.5, places=2)
 
+    def test_normal_quantile(self):
+        """Test Normal.quantile() — inverse CDF (probit)."""
+        norm = Normal(mu=0.0, sigma=1.0)
+        # Known values for standard normal
+        self.assertAlmostEqual(norm.quantile(0.5), 0.0, places=6)
+        self.assertAlmostEqual(norm.quantile(0.975), 1.959964, places=4)
+        self.assertAlmostEqual(norm.quantile(0.025), -1.959964, places=4)
+        self.assertAlmostEqual(norm.quantile(0.9), 1.281552, places=4)
+        # Round-trip: quantile(cdf(x)) ≈ x
+        for x in (-2.0, -1.0, 0.0, 1.0, 2.0):
+            self.assertAlmostEqual(norm.quantile(norm.cdf(x)), x, places=5)
+        # Non-standard Normal
+        n2 = Normal(mu=5.0, sigma=2.0)
+        self.assertAlmostEqual(n2.quantile(0.5), 5.0, places=6)
+        # Boundary errors
+        with self.assertRaises(ValueError):
+            norm.quantile(0.0)
+        with self.assertRaises(ValueError):
+            norm.quantile(1.0)
+
+    def test_poisson_pmf_large_k(self):
+        """Poisson.pmf() must not overflow for k > 170 (factorial overflow guard)."""
+        p = Poisson(lam=10.0)
+        # k=200 would crash with math.factorial; log-space implementation handles it
+        result = p.pmf(200)
+        self.assertGreaterEqual(result, 0.0)
+        self.assertAlmostEqual(result, 0.0, places=10)  # negligible probability
+
     def test_exponential(self):
         """Test Exponential distribution."""
         exp = Exponential(lam=1.0)
