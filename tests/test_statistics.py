@@ -11,7 +11,7 @@ from statistics import (
     mean, median, mode, variance, std,
     covariance, correlation,
     z_score, t_test, two_sample_t_test,
-    ab_test
+    z_test, ab_test
 )
 
 
@@ -87,6 +87,19 @@ class TestHypothesisTesting(unittest.TestCase):
         sample2 = [6, 7, 8, 9, 10]
         t_stat, reject = two_sample_t_test(sample1, sample2, alpha=0.05)
         self.assertTrue(reject)  # Means are clearly different
+
+    def test_z_test(self):
+        """Test z-test with known population std."""
+        # Large sample clearly different from mu=10 → reject
+        sample = [1, 2, 3, 4, 5]
+        z_stat, reject = z_test(sample, population_mean=10, population_std=2.0)
+        self.assertTrue(reject)
+        # Sample consistent with mu=3 → do not reject
+        _, reject2 = z_test([3.0, 3.0, 3.0, 3.0, 3.0], population_mean=3.0, population_std=1.0)
+        self.assertFalse(reject2)
+        # Non-standard alpha
+        z_stat3, reject3 = z_test([1, 2, 3, 4, 5], population_mean=10, population_std=2.0, alpha=0.01)
+        self.assertTrue(reject3)
 
     def test_ab_test(self):
         """Test A/B test."""
