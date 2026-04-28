@@ -345,11 +345,16 @@ def slice_sampling(
         left = x - width * random.random()
         right = left + width
 
-        # Step out
-        while log_pdf(left) > log_y:
+        # Step out (capped to prevent infinite loop on flat/improper targets)
+        max_steps = 1000
+        steps = 0
+        while log_pdf(left) > log_y and steps < max_steps:
             left -= width
-        while log_pdf(right) > log_y:
+            steps += 1
+        steps = 0
+        while log_pdf(right) > log_y and steps < max_steps:
             right += width
+            steps += 1
 
         # Sample from slice using shrinkage
         while True:
